@@ -2,5 +2,11 @@ RewriteEngine on
 RewriteCond %{REQUEST_URI} !^/index.html$
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_URI} ^/(\d)+$
+RewriteCond %{HTTP_USER_AGENT} Discordbot [NC]
+RewriteRule ^(.*)$ https://mods.aoe2.se/api/v1/preview/$1 [R=301,L]
+RewriteCond %{REQUEST_URI} !^/index.html$
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{HTTP_ACCEPT} 'text/html'
 RewriteRule . /index.html [L]

@@ -1,10 +1,12 @@
+import json
 import sqlite3
 from enum import Enum
 from pathlib import Path
 from sqlite3 import Row
-from typing import List, Optional
+from typing import List
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from starlette.middleware.cors import CORSMiddleware
 
@@ -123,3 +125,51 @@ def single_mod(mod_id: int) -> ModEntryList:
     db_results = db.execute(query, {'modId': mod_id}).fetchall()
     results = [to_mod_entry(row) for row in db_results]
     return ModEntryList(modEntries=results, total=total, filtered=len(results), page=-1, pageSize=-1)
+
+
+@app.get("/api/v1/preview/{mod_id}", response_class=HTMLResponse)
+def single_mod(mod_id: int) -> str:
+    query = f'''SELECT json
+    FROM mods_raw
+    WHERE modId = :modId
+    AND rowid in (SELECT MAX(rowid) FROM mods_raw WHERE modId = :modId)
+    '''
+    db_result = db.execute(query, {'modId': mod_id}).fetchone()
+    if not db_result:
+        raise HTTPException(status_code=404, detail="Mod not found")
+    json_content = json.loads(db_result['json'])
+    mod_name = json_content['modName']
+    description = json_content['description']
+    image_url = json_content['imageUrls'][0]['imageThumbnail'] if json_content['imageUrls'] else ''
+    author = json_content['creatorName']
+    return f'''<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>{mod_name}</title>
+    <!-- Facebook Open Graph -->
+    <meta property="og:site_name" content="mods.aoe2.se"/>
+    <meta property="og:title" content="{mod_name}"/>
+    <meta property="og:url" content="https://mods.aoe2.se/{mod_id}"/>
+    <meta property="og:type" content="article"/>
+    <meta property="og:description" content="{description}"/>
+    <meta property="og:image" content="{image_url}"/>
+    <meta property="og:image:width" content="400"/>
+    <meta property="og:image:height" content="225"/>
+    <!-- Schema.org -->
+    <meta itemprop="name" content="AoE2 DE Mod"/>
+    <meta itemprop="headline" content="{mod_name}"/>
+    <meta itemprop="description" content="{description}"/>
+    <meta itemprop="image" content="{image_url}"/>
+    <meta itemprop="author" content="{author}"/>
+    <!-- Twitter Cards -->
+    <meta name="twitter:title" content="{mod_name}"/>
+    <meta name="twitter:url" content="https://mods.aoe2.se/{mod_id}"/>
+    <meta name="twitter:description" content="{description}"/>
+    <meta name="twitter:image" content="{image_url}"/>
+    <meta name="twitter:card" content="summary"/>
+</head>
+<body>
+This is a preview generated for preview bots.
+</body>
+'''
