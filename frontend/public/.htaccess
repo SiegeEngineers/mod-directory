@@ -1,0 +1,6 @@
+RewriteEngine on
+RewriteCond %{REQUEST_URI} !^/index.html$
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{HTTP_ACCEPT} 'text/html'
+RewriteRule . /index.html [L]
