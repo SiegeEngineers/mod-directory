@@ -11,17 +11,32 @@
         }
     }
 
+    const selectAll = () => {
+        $modCategories = MOD_CATEGORIES.map(value => value.id);
+    }
+
+    const clear = () => {
+        $modCategories = [];
+    }
+
 </script>
 
 <div class="columns is-desktop is-flex-wrap-wrap">
     {#each MOD_CATEGORIES as {id, name} (id)}
         <div class="column is-one-fifth-desktop">
             <label class="checkbox">
-                <input type="checkbox" checked="{$modCategories.includes(id) ? 'checked' : ''}" on:click={()=>toggle(id)}>
+                <input type="checkbox" checked="{$modCategories.includes(id) ? 'checked' : ''}"
+                       on:click={()=>toggle(id)}>
                 {name}
             </label>
         </div>
     {/each}
+    <div class="column is-one-fifth-desktop">
+        <button class="button is-small" on:click={selectAll}>select all</button>
+    </div>
+    <div class="column is-one-fifth-desktop">
+        <button class="button is-small" on:click={clear}>clear all</button>
+    </div>
 </div>
 
 <style>
