@@ -10,6 +10,7 @@ export interface IMod {
     "modId": number
     "modName": string
     "modDescription": string
+    "changeList": string
     "modType": string
     "modTagIds": number[]
     "modStatus": string

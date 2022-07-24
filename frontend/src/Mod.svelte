@@ -6,6 +6,7 @@
 
     export let mod: IMod;
     let div;
+    export let extraInfo: boolean = false;
     export let short: boolean = true;
     let displayShortToggle: boolean = false;
     $: classlist = short ? 'mod-description short' : 'mod-description';
@@ -23,9 +24,17 @@
     <div class="card-content">
         <div class="columns">
             <div class="column is-one-fifth">
-                <figure class="image is-16by9">
-                    <img loading="lazy" src="{mod.imageUrls[0].imageThumbnail}" alt="Thumbnail">
-                </figure>
+                {#if extraInfo}
+                    {#each mod.imageUrls as imageUrl}
+                        <figure class="image is-16by9">
+                            <img loading="lazy" src="{imageUrl.imageThumbnail}" alt="Thumbnail">
+                        </figure>
+                    {/each}
+                {:else}
+                    <figure class="image is-16by9">
+                        <img loading="lazy" src="{mod.imageUrls[0].imageThumbnail}" alt="Thumbnail">
+                    </figure>
+                {/if}
             </div>
             <div class="column">
                 <h3 class="title is-4">
@@ -36,17 +45,27 @@
                 </h3>
                 <h4 class="title is-6">
                     by {mod.creatorName}
-                    <img loading="lazy" alt="creator avatar" class="image is-24x24 avatar" src="{mod.creatorAvatarUrl}"/>
+                    <img loading="lazy" alt="creator avatar" class="image is-24x24 avatar"
+                         src="{mod.creatorAvatarUrl}"/>
                 </h4>
-                <div class={classlist} bind:this={div}>{@html mod.modDescription}</div>
-                {#if displayShortToggle}
-                <div class="short-toggle" on:click={()=>short = !short}>
-                    {#if short}
-                        <img class="arrow" alt="expand" src="/img/arrowdown.svg">
-                    {:else}
-                        <img class="arrow" alt="condense" src="/img/arrowup.svg">
+                <div class={classlist} bind:this={div}>
+                    {@html mod.modDescription}
+                    {#if extraInfo}
+                        {#if mod.changeList}
+                            <hr>
+                            <h4 class="title is-5">Changelog</h4>
+                            {@html mod.changeList}
+                        {/if}
                     {/if}
                 </div>
+                {#if displayShortToggle}
+                    <div class="short-toggle" on:click={()=>short = !short}>
+                        {#if short}
+                            <img class="arrow" alt="expand" src="/img/arrowdown.svg">
+                        {:else}
+                            <img class="arrow" alt="condense" src="/img/arrowup.svg">
+                        {/if}
+                    </div>
                 {/if}
             </div>
         </div>
@@ -56,8 +75,8 @@
             ageofempires.com</a>
         <DownloadLink fileUrl={mod.fileUrl} modFileSize={mod.modFileSize}/>
         <p class="card-footer-item">
-            <span class="tag is-secondary" title="created">C: {mod.createDate.substring(0, 10)}</span>
-            <span class="tag is-secondary" title="updated">U: {mod.lastUpdate.substring(0, 10)}</span>
+            <span class="tag is-secondary" title="created: {mod.createDate}">C: {mod.createDate.substring(0, 10)}</span>
+            <span class="tag is-secondary" title="updated: {mod.lastUpdate}">U: {mod.lastUpdate.substring(0, 10)}</span>
             <span class="tag is-info">{mod.downloads.toLocaleString('en-US')} Downloads</span>
         </p>
     </footer>
@@ -90,5 +109,13 @@
 
     .tag {
         margin-right: .5em;
+    }
+
+    figure {
+        margin-bottom: .5rem;
+    }
+
+    .card-footer-item {
+        flex-wrap: wrap;
     }
 </style>
