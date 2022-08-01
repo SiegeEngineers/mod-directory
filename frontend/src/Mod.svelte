@@ -30,7 +30,7 @@
                             <img loading="lazy" src="{imageUrl.imageThumbnail}" alt="Thumbnail">
                         </figure>
                     {/each}
-                {:else}
+                {:else if mod.imageUrls.length > 0}
                     <figure class="image is-16by9">
                         <img loading="lazy" src="{mod.imageUrls[0].imageThumbnail}" alt="Thumbnail">
                     </figure>
