@@ -73,9 +73,7 @@ def main():
     if TMP_FILE.is_file():
         mod_list = json.loads(TMP_FILE.read_text())
     else:
-        response = requests.post(FIND_URL, json={'start': 1, 'count': 1, 'q': "", 'game': 2, 'modid': 0, 'status': "",
-                                                 'sort': "createDate", 'order': "ASC"}, cookies=COOKIES)
-        total_count = response.json()['totalCount']
+        total_count = fetch_total_count()
         print(f'Fetching {total_count} mods')
         pages_count = (total_count - 1) // PAGE_SIZE + 1
         for i in range(1, pages_count + 1):
@@ -112,6 +110,21 @@ def fetch_page(i) -> List[Dict]:
             print(f'Oops: {e}')
             time.sleep(5)
     raise Exception(f'Max retries exceeded for page {i}')
+
+def fetch_total_count() -> int:
+    for _ in range(RETRIES):
+        try:
+            response = requests.post(FIND_URL, json={'start': 1, 'count': 1, 'q': "", 'game': 2, 'modid': 0, 'status': "",
+                                                 'sort': "createDate", 'order': "ASC"}, cookies=COOKIES)
+            total_count = response.json()['totalCount']
+            if total_count is None:
+                time.sleep(5)
+                continue
+            return total_count
+        except Exception as e:
+            print(f'Oops: {e}')
+            time.sleep(5)
+    raise Exception(f'Max retries exceeded when fetching total count')
 
 
 def fetch_details(mod_id: int) -> Dict:
