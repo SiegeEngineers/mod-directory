@@ -112,18 +112,20 @@ def fetch_page(i) -> List[Dict]:
     raise Exception(f'Max retries exceeded for page {i}')
 
 def fetch_total_count() -> int:
-    for _ in range(RETRIES):
+    for i in range(1, RETRIES * 10):
         try:
             response = requests.post(FIND_URL, json={'start': 1, 'count': 1, 'q': "", 'game': 2, 'modid': 0, 'status': "",
                                                  'sort': "createDate", 'order': "ASC"}, cookies=COOKIES)
             total_count = response.json()['totalCount']
             if total_count is None:
-                time.sleep(5)
+                print(f'Got None total mods, retrying in  {5 * i} s')
+                (Path(__file__).parent / f'response{i}_tmp.json').write_text(response.text)
+                time.sleep(5 * i)
                 continue
             return total_count
         except Exception as e:
             print(f'Oops: {e}')
-            time.sleep(5)
+            time.sleep(5 * i)
     raise Exception(f'Max retries exceeded when fetching total count')
 
 
