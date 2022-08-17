@@ -30,6 +30,7 @@
                 </div>
             </div>
             <ModList modList={modList}/>
+            <Pagination page={paginationInfo.page} pageSize={paginationInfo.pageSize} total={paginationInfo.filtered}/>
         {/if}
     </div>
 </section>
