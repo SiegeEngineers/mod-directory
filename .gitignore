@@ -3,4 +3,5 @@ build
 venv
 mods.db
 cookies.json
+config.json
 .DS_Store

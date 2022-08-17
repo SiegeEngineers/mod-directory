@@ -37,6 +37,8 @@ npm run dev
 
 todo
 
+The `scrape.py` needs a `config.json` for cookie management.
+
 ### frontend
 
 ```

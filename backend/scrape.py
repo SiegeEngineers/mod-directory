@@ -2,14 +2,17 @@
 
 import json
 import sqlite3
+import subprocess
 import time
 from pathlib import Path
 from typing import Dict, List
 
 import requests
 
-COOKIE_PATH = 'cookies.json'
+CONFIG = json.loads(Path(__file__).with_name('config.json').read_text())
+COOKIE_PATH = CONFIG['cookie_path']
 COOKIES = json.loads(Path(COOKIE_PATH).read_text())
+COOKIE_REFRESH_SCRIPT = CONFIG['cookie_refresh_script']
 PAGE_SIZE = 1000
 RETRIES = 3
 
@@ -18,6 +21,10 @@ DETAILS_URL = 'https://api.ageofempires.com/api/v4/mods/Detail/{mod_id}'
 DB_LOCATION = Path(__file__).parent / 'mods.db'
 TMP_FILE = Path(__file__).parent / 'all_the_mods_tmp.json'
 MOD_LIST_FILE = Path(__file__).parent / 'all_the_mods.json'
+
+
+class InvalidCookiesException(Exception):
+    pass
 
 
 class Database:
@@ -67,6 +74,11 @@ class Database:
         self.db.close()
 
 
+def update_cookies():
+    global COOKIES
+    subprocess.run([COOKIE_REFRESH_SCRIPT], check=True)
+    COOKIES = json.loads(Path(COOKIE_PATH).read_text())
+
 def main():
     db = Database()
     mod_list = []
@@ -104,18 +116,26 @@ def fetch_page(i) -> List[Dict]:
                                            'sort': "createDate",
                                            'order': "ASC"},
                                      cookies=COOKIES)
+            if response.status_code == 401:
+                raise InvalidCookiesException
             rj = response.json()
             return rj['modList']
+        except InvalidCookiesException:
+            update_cookies()
         except Exception as e:
             print(f'Oops: {e}')
             time.sleep(5)
     raise Exception(f'Max retries exceeded for page {i}')
 
+
 def fetch_total_count() -> int:
     for i in range(1, RETRIES * 10):
         try:
-            response = requests.post(FIND_URL, json={'start': 1, 'count': 1, 'q': "", 'game': 2, 'modid': 0, 'status': "",
-                                                 'sort': "createDate", 'order': "ASC"}, cookies=COOKIES)
+            response = requests.post(FIND_URL, json={'start': 1, 'count': 1, 'q': "", 'game': 2, 'modid': 0,
+                                                     'status': "", 'sort': "createDate", 'order': "ASC"},
+                                     cookies=COOKIES)
+            if response.status_code == 401:
+                raise InvalidCookiesException
             total_count = response.json()['totalCount']
             if total_count is None:
                 print(f'Got None total mods, retrying in  {5 * i} s')
@@ -123,6 +143,8 @@ def fetch_total_count() -> int:
                 time.sleep(5 * i)
                 continue
             return total_count
+        except InvalidCookiesException:
+            update_cookies()
         except Exception as e:
             print(f'Oops: {e}')
             time.sleep(5 * i)
@@ -133,7 +155,11 @@ def fetch_details(mod_id: int) -> Dict:
     for _ in range(RETRIES):
         try:
             response = requests.get(DETAILS_URL.format(mod_id=mod_id), cookies=COOKIES)
+            if response.status_code == 401:
+                raise InvalidCookiesException
             return response.json()
+        except InvalidCookiesException:
+            update_cookies()
         except Exception as e:
             print(f'Oops: {e}')
             time.sleep(5)
