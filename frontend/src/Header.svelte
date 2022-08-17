@@ -1,7 +1,7 @@
 <script lang="ts">
     import {singleModId} from "./stores";
 
-    export let promise: Promise<{modList, lastUpdate, modCount}>;
+    export let promise: Promise<{modList, paginationInfo}>;
 
     const clickHandler = () => {
         singleModId.set(null);

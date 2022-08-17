@@ -8,16 +8,34 @@
     import {singleModId} from "./stores";
     import Pagination from "./Pagination.svelte";
     import TagSelector from "./TagSelector.svelte";
+    import LoadingProgress from "./LoadingProgress.svelte";
+    import LoadingError from "./LoadingError.svelte";
 
-    export let modList: IMod[];
-    export let paginationInfo: IPaginationInfo;
+    export let promise: Promise<{ modList, paginationInfo }>;
+    let result: { modList, paginationInfo };
+    let modList: IMod[] = [];
+    let paginationInfo: IPaginationInfo = {total: 0, filtered: 0, page: 0, pageSize: 0};
+
+    $: updateResult(promise);
+
+    async function updateResult(promise) {
+		result = await promise;
+        modList = result.modList;
+        paginationInfo = result.paginationInfo;
+	}
 </script>
 
 <section class="section">
     <div class="container">
         <Messages {modList}/>
         {#if $singleModId}
-            <SingleMod {modList}/>
+            {#await promise}
+                <LoadingProgress/>
+            {:then resolved}
+                <SingleMod modList="{resolved.modList}"/>
+            {:catch error}
+                <LoadingError/>
+            {/await}
         {:else}
             <Pagination page={paginationInfo.page} pageSize={paginationInfo.pageSize} total={paginationInfo.filtered}/>
             <TagSelector/>
@@ -29,7 +47,13 @@
                     <Sorter/>
                 </div>
             </div>
-            <ModList modList={modList}/>
+            {#await promise}
+                <LoadingProgress/>
+            {:then resolved}
+                <ModList modList="{resolved.modList}"/>
+            {:catch error}
+                <LoadingError/>
+            {/await}
             <Pagination page={paginationInfo.page} pageSize={paginationInfo.pageSize} total={paginationInfo.filtered}/>
         {/if}
     </div>

@@ -77,12 +77,6 @@
 
 <main>
 	<Header {promise}/>
-	{#await promise}
-		<LoadingProgress/>
-	{:then resolved}
-		<PageContent modList={resolved.modList} paginationInfo={resolved.paginationInfo}/>
-	{:catch error}
-		<LoadingError/>
-	{/await}
+	<PageContent {promise}/>
 	<Footer/>
 </main>
