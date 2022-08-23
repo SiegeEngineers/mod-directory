@@ -4,6 +4,7 @@ import json
 import sqlite3
 import subprocess
 import time
+import sys
 from pathlib import Path
 from typing import Dict, List
 
@@ -19,8 +20,6 @@ RETRIES = 3
 FIND_URL = 'https://api.ageofempires.com/api/v4/mods/Find'
 DETAILS_URL = 'https://api.ageofempires.com/api/v4/mods/Detail/{mod_id}'
 DB_LOCATION = Path(__file__).parent / 'mods.db'
-TMP_FILE = Path(__file__).parent / 'all_the_mods_tmp.json'
-MOD_LIST_FILE = Path(__file__).parent / 'all_the_mods.json'
 
 
 class InvalidCookiesException(Exception):
@@ -79,28 +78,29 @@ def update_cookies():
     subprocess.run([COOKIE_REFRESH_SCRIPT], check=True)
     COOKIES = json.loads(Path(COOKIE_PATH).read_text())
 
+
+def do_full_scan():
+    return len(sys.argv) > 1 and sys.argv[1] == 'full'
+
+
 def main():
     db = Database()
-    mod_list = []
-    if TMP_FILE.is_file():
-        mod_list = json.loads(TMP_FILE.read_text())
-    else:
-        total_count = fetch_total_count()
-        print(f'Fetching {total_count} mods')
-        pages_count = (total_count - 1) // PAGE_SIZE + 1
-        for i in range(1, pages_count + 1):
-            print(f'Fetching page {i} of {pages_count}')
-            page = fetch_page(i)
-            mod_list.extend(page)
-        TMP_FILE.write_text(json.dumps(mod_list, indent=2))
-    for mod in mod_list:
-        mod_id = mod['modId']
-        # print(f'checking {mod_id=}')
-        if db.should_update(mod_id, mod['lastUpdate']):
-            print(f'Fetching details for mod {mod_id}')
-            details = fetch_details(mod_id)
-            db.add(details)
-    TMP_FILE.rename(MOD_LIST_FILE)
+    total_count = fetch_total_count()
+    print(f'Fetching {total_count} mods')
+    pages_count = (total_count - 1) // PAGE_SIZE + 1
+    for i in range(1, pages_count + 1):
+        print(f'Fetching page {i} of {pages_count}')
+        page = fetch_page(i)
+        for mod in page:
+            mod_id = mod['modId']
+            if db.should_update(mod_id, mod['lastUpdate']):
+                print(f' Fetching details for mod {mod_id}')
+                details = fetch_details(mod_id)
+                db.add(details)
+            elif not do_full_scan():
+                print('Found mod version we already know. Finished!')
+                print(f'{mod_id=} at {mod["lastUpdate"]}')
+                return
 
 
 def fetch_page(i) -> List[Dict]:
@@ -113,8 +113,8 @@ def fetch_page(i) -> List[Dict]:
                                            'game': 2,
                                            'modid': 0,
                                            'status': "",
-                                           'sort': "createDate",
-                                           'order': "ASC"},
+                                           'sort': "lastUpdate",
+                                           'order': "DESC"},
                                      cookies=COOKIES)
             if response.status_code == 401:
                 raise InvalidCookiesException
@@ -122,6 +122,7 @@ def fetch_page(i) -> List[Dict]:
             return rj['modList']
         except InvalidCookiesException:
             update_cookies()
+            time.sleep(5)
         except Exception as e:
             print(f'Oops: {e}')
             time.sleep(5)
@@ -132,8 +133,9 @@ def fetch_total_count() -> int:
     for i in range(1, RETRIES * 10):
         try:
             response = requests.post(FIND_URL, json={'start': 1, 'count': 1, 'q': "", 'game': 2, 'modid': 0,
-                                                     'status': "", 'sort': "createDate", 'order': "ASC"},
+                                                     'status': "", 'sort': "lastUpdate", 'order': "DESC"},
                                      cookies=COOKIES)
+            print(response.text)
             if response.status_code == 401:
                 raise InvalidCookiesException
             total_count = response.json()['totalCount']
