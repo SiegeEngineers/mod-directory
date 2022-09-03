@@ -127,6 +127,18 @@ def single_mod(mod_id: int) -> ModEntryList:
     return ModEntryList(modEntries=results, total=total, filtered=len(results), page=-1, pageSize=-1)
 
 
+@app.get("/api/v1/mod/{mod_id}/history")
+def mod_history(mod_id: int) -> ModEntryList:
+    query = f'''SELECT modId, modName, modTypeId, createDate, lastUpdate, json
+    FROM mods_raw
+    WHERE modId = :modId
+    ORDER BY rowid DESC
+    '''
+    db_results = db.execute(query, {'modId': mod_id}).fetchall()
+    results = [to_mod_entry(row) for row in db_results]
+    return ModEntryList(modEntries=results, total=-1, filtered=len(results), page=-1, pageSize=-1)
+
+
 @app.get("/api/v1/preview/{mod_id}", response_class=HTMLResponse)
 def single_mod(mod_id: int) -> str:
     query = f'''SELECT json

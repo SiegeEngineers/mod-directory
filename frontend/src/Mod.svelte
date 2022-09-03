@@ -5,6 +5,7 @@
     import {afterUpdate} from "svelte";
 
     export let mod: IMod;
+    export let history: IMod[] = undefined;
     let div;
     export let extraInfo: boolean = false;
     export let short: boolean = true;
@@ -81,6 +82,35 @@
         </p>
     </footer>
 </div>
+{#if history}
+    <div class="card">
+        <header class="card-header">
+            <p class="card-header-title">
+                Version History
+            </p>
+        </header>
+        <div class="card-content">
+            <div class="content">
+                <table class="table is-hoverable">
+                    <tr>
+                        <th>Updated</th>
+                        <th>Title</th>
+                        <th>Download</th>
+                    </tr>
+                    {#each history as entry}
+                        <tr>
+                            <td>{entry.lastUpdate}</td>
+                            <td>{entry.modName}</td>
+                            <td>
+                                <DownloadLink fileUrl={entry.fileUrl} modFileSize={entry.modFileSize} className=""/>
+                            </td>
+                        </tr>
+                    {/each}
+                </table>
+            </div>
+        </div>
+    </div>
+{/if}
 
 <style>
     .card {
