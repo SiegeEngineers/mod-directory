@@ -1,7 +1,7 @@
 <script type="ts">
 
     import {MOD_CATEGORIES} from "./helpers";
-    import {modCategories} from "./stores";
+    import {compactMode, modCategories} from "./stores";
 
     const toggle = (id: number) => {
         if ($modCategories.includes(id)) {
@@ -17,6 +17,9 @@
 
     const clear = () => {
         $modCategories = [];
+    }
+    const toggleCompactMode = () => {
+        $compactMode = !$compactMode;
     }
 
 </script>
@@ -36,6 +39,13 @@
     </div>
     <div class="column is-one-fifth-desktop">
         <button class="button is-small" on:click={clear}>clear all</button>
+    </div>
+    <div class="column is-one-fifth-desktop">
+        <label class="checkbox">
+            <input type="checkbox" checked="{$compactMode}"
+                   on:click={()=>toggleCompactMode()}>
+            Compact View
+        </label>
     </div>
 </div>
 

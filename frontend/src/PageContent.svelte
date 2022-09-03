@@ -54,7 +54,16 @@
             {:catch error}
                 <LoadingError/>
             {/await}
-            <Pagination page={paginationInfo.page} pageSize={paginationInfo.pageSize} total={paginationInfo.filtered}/>
+            <div class="pagination-bottom">
+                <Pagination page={paginationInfo.page} pageSize={paginationInfo.pageSize}
+                            total={paginationInfo.filtered}/>
+            </div>
         {/if}
     </div>
 </section>
+
+<style>
+    .pagination-bottom {
+        margin-top: 2rem;
+    }
+</style>
