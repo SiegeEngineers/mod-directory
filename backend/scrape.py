@@ -14,7 +14,7 @@ CONFIG = json.loads(Path(__file__).with_name('config.json').read_text())
 COOKIE_PATH = CONFIG['cookie_path']
 COOKIES = json.loads(Path(COOKIE_PATH).read_text())
 COOKIE_REFRESH_SCRIPT = CONFIG['cookie_refresh_script']
-PAGE_SIZE = 10
+PAGE_SIZE = 100
 RETRIES = 3
 
 FIND_URL = 'https://api.ageofempires.com/api/v4/mods/Find'
