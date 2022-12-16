@@ -40,14 +40,15 @@ class Database:
             modTypeId int NOT NULL,
             createDate TEXT NOT NULL,
             lastUpdate TEXT NOT NULL,
-            json TEXT NOT NULL
+            json TEXT NOT NULL,
+            fileList TEXT DEFAULT NULL
         );''')
         self.db.execute('''CREATE TABLE IF NOT EXISTS mod_tags (
             modRowId int NOT NULL REFERENCES mods_raw(ROWID),
             tag int NOT NULL
         );''')
         self.db.execute('''CREATE VIEW IF NOT EXISTS mods AS 
-            SELECT rowid, modId, modName, modTypeId, createDate, lastUpdate, json
+            SELECT rowid, modId, modName, modTypeId, createDate, lastUpdate, json, fileList
             FROM mods_raw
             WHERE rowid IN (SELECT MAX(rowid) FROM mods_raw GROUP BY modId);
         ''')
