@@ -4,8 +4,8 @@
     export let modList;
 </script>
 
-{#each modList as mod (mod.modId)}
-    <Mod {mod}/>
+{#each modList as mod (mod.json.modId)}
+    <Mod mod={mod.json}/>
 {:else}
     <article class="message is-info">
         <div class="message-body">

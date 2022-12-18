@@ -5,6 +5,7 @@
     import {afterUpdate} from "svelte";
 
     export let mod: IMod;
+    export let fileList: string[] | null = null;
     export let history: IMod[] = undefined;
     let div;
     export let extraInfo: boolean = false;
@@ -84,6 +85,13 @@
                     <div class={classlist} bind:this={div}>
                         {@html mod.modDescription}
                         {#if extraInfo}
+                            <hr>
+                            <h4 class="title is-5">File List</h4>
+                            {#if fileList}
+                                <pre>{#each fileList as line}{#if !line.endsWith('/')}{line + '\n'}{/if}{/each}</pre>
+                            {:else}
+                                <pre>currently not available.</pre>
+                            {/if}
                             {#if mod.changeList}
                                 <hr>
                                 <h4 class="title is-5">Changelog</h4>

@@ -2,7 +2,6 @@
 	import Header from "./Header.svelte";
 	import PageContent from "./PageContent.svelte";
 	import Footer from "./Footer.svelte";
-	import LoadingProgress from "./LoadingProgress.svelte";
 	import {resetTitleAndUrl, updateTitleAndUrl} from "./helpers";
 	import {onDestroy} from "svelte";
 	import {
@@ -14,7 +13,6 @@
 		sortDirection,
 		sortMethod
 	} from "./stores";
-	import LoadingError from "./LoadingError.svelte";
 
 	const init = async () => {
 		let json;
@@ -41,7 +39,7 @@
 
 		if (response.ok) {
 			let modEntries = json.modEntries;
-			let modList = modEntries.map(e => JSON.parse(e.json_str))
+			let modList = modEntries.map(e => ({json: JSON.parse(e.json_str), fileList: JSON.parse(e.fileList)}))
 			let total = json.total
 			let filtered = json.filtered
 			let page = json.page;

@@ -1,17 +1,17 @@
 <script lang="ts">
-    import type {IMod} from "./Interfaces";
+    import type {IMod, IModListEntry} from "./Interfaces";
     import {singleModId} from "./stores";
 
-    const calculateNotFound = (list: IMod[] | undefined, id: number | null) => {
+    const calculateNotFound = (list: IModListEntry[] | undefined, id: number | null) => {
         if (!list) {
             return false;
         }
         if (id === null) {
             return false;
         }
-        return list.filter(mod => mod.modId === $singleModId).length === 0;
+        return list.filter(mod => mod.json.modId === $singleModId).length === 0;
     }
-    export let modList: IMod[];
+    export let modList: IModListEntry[];
     $: modNotFound = calculateNotFound(modList, $singleModId);
 
     const clickHandler = () => {

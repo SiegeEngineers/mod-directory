@@ -1,7 +1,7 @@
 <script lang="ts">
     import LoadingProgress from "./LoadingProgress.svelte";
     import Mod from "./Mod.svelte";
-    import type {IMod} from "./Interfaces";
+    import type {IMod, IModListEntry} from "./Interfaces";
     import {singleModId} from "./stores";
 
     const loadHistory = async () => {
@@ -21,8 +21,8 @@
     let promise: Promise<{ modList }>;
 
 
-    export let modList: IMod[];
-    $: filteredModList = modList ? modList.filter(mod => mod.modId === $singleModId) : [];
+    export let modList: IModListEntry[];
+    $: filteredModList = modList ? modList.filter(mod => mod.json.modId === $singleModId) : [];
     $: historyPromise = loadHistory();
 </script>
 
@@ -30,8 +30,8 @@
     {#await historyPromise}
         <LoadingProgress/>
     {:then resolved}
-        {#each filteredModList as mod (mod.modId)}
-            <Mod short={false} extraInfo={true} {mod} history="{resolved}"/>
+        {#each filteredModList as mod (mod.json.modId)}
+            <Mod short={false} extraInfo={true} mod={mod.json} fileList={mod.fileList} history="{resolved}"/>
         {/each}
     {/await}
 {:else}

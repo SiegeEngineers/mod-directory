@@ -3,7 +3,7 @@ import sqlite3
 from enum import Enum
 from pathlib import Path
 from sqlite3 import Row
-from typing import List
+from typing import List, Optional
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
@@ -55,6 +55,7 @@ class ModEntry(BaseModel):
     createDate: str
     lastUpdate: str
     json_str: str
+    fileList: Optional[str]
 
 
 class ModEntryList(BaseModel):
@@ -73,6 +74,7 @@ def to_mod_entry(row: Row) -> ModEntry:
         createDate=row['createDate'],
         lastUpdate=row['lastUpdate'],
         json_str=row['json'],
+        fileList=row['fileList'],
     )
 
 
@@ -95,7 +97,7 @@ def list_mods(query_data: QueryData) -> ModEntryList:
     {mod_type_id_filter}
     {search_term_filter}'''
 
-    query = f'''SELECT DISTINCT m.modId, m.modName, m.modTypeId, m.createDate, m.lastUpdate, m.json
+    query = f'''SELECT DISTINCT m.modId, m.modName, m.modTypeId, m.createDate, m.lastUpdate, m.json, m.fileList
     FROM mods m JOIN mod_tags t ON m.rowid = t.modRowId
     {mod_type_id_filter}
     {search_term_filter}
@@ -117,7 +119,7 @@ def list_mods(query_data: QueryData) -> ModEntryList:
 @app.get("/api/v1/mod/{mod_id}")
 def single_mod(mod_id: int) -> ModEntryList:
     total = db.execute('select count(distinct(modId)) as c from mods_raw').fetchone()['c']
-    query = f'''SELECT modId, modName, modTypeId, createDate, lastUpdate, json
+    query = f'''SELECT modId, modName, modTypeId, createDate, lastUpdate, json, fileList
     FROM mods_raw
     WHERE modId = :modId
     AND rowid in (SELECT MAX(rowid) FROM mods_raw WHERE modId = :modId)
@@ -129,7 +131,7 @@ def single_mod(mod_id: int) -> ModEntryList:
 
 @app.get("/api/v1/mod/{mod_id}/history")
 def mod_history(mod_id: int) -> ModEntryList:
-    query = f'''SELECT modId, modName, modTypeId, createDate, lastUpdate, json
+    query = f'''SELECT modId, modName, modTypeId, createDate, lastUpdate, json, fileList
     FROM mods_raw
     WHERE modId = :modId
     ORDER BY rowid DESC

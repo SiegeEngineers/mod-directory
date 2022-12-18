@@ -6,6 +6,10 @@ export interface Image {
     "imageFileSize": string
 }
 
+export interface IModListEntry {
+    json: IMod
+    fileList: string[]
+}
 export interface IMod {
     "modId": number
     "modName": string
