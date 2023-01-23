@@ -50,7 +50,7 @@ def load_file_list(json_str: str) -> List[str]:
         return [f'skipped due to file size of {size / 1_000_000} MiB']
     if url:
         print(f'Fetching "{url}"')
-        response = requests.get(url, timeout=10)
+        response = requests.get(url, timeout=20)
         if response.status_code != 200:
             return [f'status-code-{response.status_code}']
         try:
@@ -68,11 +68,14 @@ def main():
     if len(sys.argv) > 1:
         count = int(sys.argv[1])
     db = Database()
-    rows_to_update = db.get_rows_to_update(count)
-    for row in rows_to_update:
-        db.set_dummy_file_list(row['rowid'])
-        file_list = load_file_list(row['json'])
-        db.set_file_list(row['rowid'], file_list)
+    try:
+        rows_to_update = db.get_rows_to_update(count)
+        for row in rows_to_update:
+            db.set_dummy_file_list(row['rowid'])
+            file_list = load_file_list(row['json'])
+            db.set_file_list(row['rowid'], file_list)
+    except Exception:
+        pass  # no need to email me about this :\
     db.close()
 
 
