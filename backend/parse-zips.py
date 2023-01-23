@@ -29,7 +29,13 @@ class Database:
         return result.fetchall()
 
     def set_file_list(self, rowid: int, file_list: List[str]):
-        parameters = {'file_list': json.dumps(file_list), 'rowid': rowid}
+        self._set_file_list(rowid, json.dumps(file_list))
+
+    def set_dummy_file_list(self, rowid: int):
+        self._set_file_list(rowid, '["skipped"]')
+
+    def _set_file_list(self, rowid: int, file_list: str):
+        parameters = {'file_list': file_list, 'rowid': rowid}
         self.cursor.execute('''UPDATE mods_raw SET fileList=:file_list WHERE rowid=:rowid''', parameters)
 
     def close(self):
@@ -39,6 +45,9 @@ class Database:
 def load_file_list(json_str: str) -> List[str]:
     data = json.loads(json_str)
     url = data.get('fileUrl', None)
+    size = data.get('modFileSize', 0)
+    if size > 500_000_000:
+        return [f'skipped due to file size of {size / 1_000_000} MiB']
     if url:
         print(f'Fetching "{url}"')
         response = requests.get(url, timeout=10)
@@ -61,6 +70,7 @@ def main():
     db = Database()
     rows_to_update = db.get_rows_to_update(count)
     for row in rows_to_update:
+        db.set_dummy_file_list(row['rowid'])
         file_list = load_file_list(row['json'])
         db.set_file_list(row['rowid'], file_list)
     db.close()
