@@ -47,6 +47,7 @@ class Database:
             modRowId int NOT NULL REFERENCES mods_raw(ROWID),
             tag int NOT NULL
         );''')
+        self.db.execute('''CREATE INDEX IF NOT EXISTS idx_mod_row_id ON mod_tags (modRowId);''')
         self.recreate_mods_table()
 
     def recreate_mods_table(self):
@@ -56,6 +57,8 @@ class Database:
             FROM mods_raw
             WHERE rowid IN (SELECT MAX(rowid) FROM mods_raw GROUP BY modId);
         ''')
+        self.db.execute('''CREATE INDEX IF NOT EXISTS idx_create_date ON mods (createDate);''')
+        self.db.execute('''CREATE INDEX IF NOT EXISTS idx_last_update ON mods (lastUpdate);''')
 
     def should_update(self, mod_id: int, last_update: str):
         result = self.db.execute('''
