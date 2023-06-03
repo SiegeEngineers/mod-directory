@@ -47,7 +47,11 @@ class Database:
             modRowId int NOT NULL REFERENCES mods_raw(ROWID),
             tag int NOT NULL
         );''')
-        self.db.execute('''CREATE VIEW IF NOT EXISTS mods AS 
+        self.recreate_mods_table()
+
+    def recreate_mods_table(self):
+        self.db.execute('''DROP TABLE IF EXISTS mods;''')
+        self.db.execute('''CREATE TABLE IF NOT EXISTS mods AS
             SELECT rowid, modId, modName, modTypeId, createDate, lastUpdate, json, fileList
             FROM mods_raw
             WHERE rowid IN (SELECT MAX(rowid) FROM mods_raw GROUP BY modId);
@@ -86,6 +90,11 @@ def do_full_scan():
 
 def main():
     db = Database()
+    update_mods(db)
+    db.recreate_mods_table()
+
+
+def update_mods(db):
     total_count = fetch_total_count()
     print(f'Fetching {total_count} mods')
     pages_count = (total_count - 1) // PAGE_SIZE + 1
