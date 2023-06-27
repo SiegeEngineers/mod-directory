@@ -46,6 +46,7 @@ class QueryData(BaseModel):
     sortColumn: SortColumn = SortColumn.createDate
     modCategories: List[int]
     searchTerm: str = ''
+    civbuilder: Optional[bool] = None
 
 
 class ModEntry(BaseModel):
@@ -56,6 +57,7 @@ class ModEntry(BaseModel):
     lastUpdate: str
     json_str: str
     fileList: Optional[str]
+    civbuilder: Optional[bool]
 
 
 class ModEntryList(BaseModel):
@@ -75,6 +77,7 @@ def to_mod_entry(row: Row) -> ModEntry:
         lastUpdate=row['lastUpdate'],
         json_str=row['json'],
         fileList=row['fileList'],
+        civbuilder=row['civbuilder'],
     )
 
 
@@ -83,31 +86,39 @@ def list_mods(query_data: QueryData) -> ModEntryList:
     total = db.execute('select count(distinct(modId)) as c from mods_raw').fetchone()['c']
     mod_type_id_filter = ''
     search_term_filter = ''
+    civbuilder_filter = ''
     if query_data.modCategories:
         category_placeholders = ','.join([f':modCategory{i}' for i in range(len(query_data.modCategories))])
         mod_type_id_filter = f'WHERE t.tag IN ({category_placeholders})'
 
     if query_data.searchTerm:
-        search_term_filter = f'WHERE m.json LIKE :searchTerm'
+        search_term_filter = 'WHERE m.json LIKE :searchTerm'
         if query_data.modCategories:
-            search_term_filter = f'AND m.json LIKE :searchTerm'
+            search_term_filter = 'AND m.json LIKE :searchTerm'
+
+    if query_data.civbuilder is not None:
+        civbuilder_filter = 'WHERE m.civbuilder = :civbuilder'
+        if query_data.modCategories or query_data.searchTerm:
+            civbuilder_filter = 'AND m.civbuilder = :civbuilder'
 
     count_query = f'''SELECT COUNT(DISTINCT m.modId) as c
     FROM mods m JOIN mod_tags t ON m.rowid = t.modRowId
     {mod_type_id_filter}
-    {search_term_filter}'''
+    {search_term_filter}
+    {civbuilder_filter}'''
 
-    query = f'''SELECT DISTINCT m.modId, m.modName, m.modTypeId, m.createDate, m.lastUpdate, m.json, m.fileList
+    query = f'''SELECT DISTINCT m.modId, m.modName, m.modTypeId, m.createDate, m.lastUpdate, m.json, m.fileList, m.civbuilder
     FROM mods m JOIN mod_tags t ON m.rowid = t.modRowId
     {mod_type_id_filter}
     {search_term_filter}
+    {civbuilder_filter}
     ORDER BY {query_data.sortColumn} {query_data.sortDirection}
     LIMIT :limit
     OFFSET :offset
     '''
 
     parameters = {'limit': PAGE_SIZE, 'offset': (query_data.page - 1) * PAGE_SIZE,
-                  'searchTerm': f'%{query_data.searchTerm}%'}
+                  'searchTerm': f'%{query_data.searchTerm}%', 'civbuilder': query_data.civbuilder}
     for i, value in enumerate(query_data.modCategories):
         parameters[f'modCategory{i}'] = value
     filtered = db.execute(count_query, parameters).fetchone()['c']
@@ -119,7 +130,7 @@ def list_mods(query_data: QueryData) -> ModEntryList:
 @app.get("/api/v1/mod/{mod_id}")
 def single_mod(mod_id: int) -> ModEntryList:
     total = db.execute('select count(distinct(modId)) as c from mods_raw').fetchone()['c']
-    query = f'''SELECT modId, modName, modTypeId, createDate, lastUpdate, json, fileList
+    query = f'''SELECT modId, modName, modTypeId, createDate, lastUpdate, json, fileList, civbuilder
     FROM mods_raw
     WHERE modId = :modId
     AND rowid in (SELECT MAX(rowid) FROM mods_raw WHERE modId = :modId)
@@ -131,7 +142,7 @@ def single_mod(mod_id: int) -> ModEntryList:
 
 @app.get("/api/v1/mod/{mod_id}/history")
 def mod_history(mod_id: int) -> ModEntryList:
-    query = f'''SELECT modId, modName, modTypeId, createDate, lastUpdate, json, fileList
+    query = f'''SELECT modId, modName, modTypeId, createDate, lastUpdate, json, fileList, civbuilder
     FROM mods_raw
     WHERE modId = :modId
     ORDER BY rowid DESC

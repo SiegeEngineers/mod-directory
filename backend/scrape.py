@@ -41,7 +41,8 @@ class Database:
             createDate TEXT NOT NULL,
             lastUpdate TEXT NOT NULL,
             json TEXT NOT NULL,
-            fileList TEXT DEFAULT NULL
+            fileList TEXT DEFAULT NULL,
+            civbuilder BOOLEAN DEFAULT NULL
         );''')
         self.db.execute('''CREATE TABLE IF NOT EXISTS mod_tags (
             modRowId int NOT NULL REFERENCES mods_raw(ROWID),
@@ -53,7 +54,7 @@ class Database:
     def recreate_mods_table(self):
         self.db.execute('''DROP TABLE IF EXISTS mods;''')
         self.db.execute('''CREATE TABLE IF NOT EXISTS mods AS
-            SELECT rowid, modId, modName, modTypeId, createDate, lastUpdate, json, fileList
+            SELECT rowid, modId, modName, modTypeId, createDate, lastUpdate, json, fileList, civbuilder
             FROM mods_raw
             WHERE rowid IN (SELECT MAX(rowid) FROM mods_raw GROUP BY modId);
         ''')
