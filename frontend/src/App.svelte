@@ -5,6 +5,7 @@
 	import {resetTitleAndUrl, updateTitleAndUrl} from "./helpers";
 	import {onDestroy} from "svelte";
 	import {
+		excludeCivbuilder,
 		modCategories,
 		queryPage,
 		reloadTriggers,
@@ -23,6 +24,7 @@
 			json = await response.json();
 		} else {
 			const filename = "/api/v1/mods"
+			const civbuilder = $excludeCivbuilder ? false : null;
 			response = await fetch(filename, {
 				method: 'POST',
 				headers: {'Content-Type': 'application/json'},
@@ -31,7 +33,8 @@
 					sortColumn: $sortMethod,
 					sortDirection: $sortDirection,
 					modCategories: $modCategories,
-					searchTerm: $searchTerm
+					searchTerm: $searchTerm,
+					civbuilder: civbuilder,
 				})
 			});
 			json = await response.json();
@@ -39,7 +42,7 @@
 
 		if (response.ok) {
 			let modEntries = json.modEntries;
-			let modList = modEntries.map(e => ({json: JSON.parse(e.json_str), fileList: JSON.parse(e.fileList)}))
+			let modList = modEntries.map(e => ({json: JSON.parse(e.json_str), fileList: JSON.parse(e.fileList), civbuilder: e.civbuilder}))
 			let total = json.total
 			let filtered = json.filtered
 			let page = json.page;

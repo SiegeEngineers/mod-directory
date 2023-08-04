@@ -8,8 +8,9 @@ export const sortDirection: Writable<string> = writable('DESC');
 export const queryPage: Writable<number> = writable(1);
 export const modCategories: Writable<number[]> = writable(MOD_CATEGORIES.map(value => value.id));
 export const singleModId: Writable<number | null> = writable(getSingleModId());
+export const excludeCivbuilder: Writable<boolean> = writable(true);
 export const compactMode: Writable<boolean> = writable(false);
 
-export const reloadTriggers: Readable<string> = derived([searchTerm, sortMethod, sortDirection, queryPage, singleModId, modCategories],
-    ([$searchTerm, $sortMethod, $sortDirection, $queryPage, $singleModId, $modCategories]) =>
-        `${$searchTerm}|${$sortMethod}|${$sortDirection}|${$queryPage}|${$singleModId}|${$modCategories.join(',')}`);
+export const reloadTriggers: Readable<string> = derived([searchTerm, sortMethod, sortDirection, queryPage, singleModId, modCategories, excludeCivbuilder],
+    ([$searchTerm, $sortMethod, $sortDirection, $queryPage, $singleModId, $modCategories, $excludeCivbuilder]) =>
+        `${$searchTerm}|${$sortMethod}|${$sortDirection}|${$queryPage}|${$singleModId}|${$modCategories.join(',')}|${$excludeCivbuilder}`);

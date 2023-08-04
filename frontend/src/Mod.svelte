@@ -5,6 +5,7 @@
     import {afterUpdate} from "svelte";
 
     export let mod: IMod;
+    export let civbuilder = false;
     export let fileList: string[] | null = null;
     export let history: IMod[] = undefined;
     let div;
@@ -37,6 +38,7 @@
                     <a href="/{mod.modId}" on:click|preventDefault={clickHandler}><b>{mod.modName}</b></a>
                     <small>by {mod.creatorName}</small>
                     <br>
+                    {#if civbuilder}<span class="tag is-info is-light" title="Civbuilder Mod (probably)">🔨</span>{/if}
                     {#each mod.modTagNames as tag}
                         <span class="tag">{tag}</span>
                     {/each}
@@ -73,6 +75,7 @@
                 <div class="column">
                     <h3 class="title is-4">
                         <a href="/{mod.modId}" on:click|preventDefault={clickHandler}>{mod.modName}</a>
+                        {#if civbuilder}<span class="tag is-info is-light" title="Civbuilder Mod (probably)">🔨</span>{/if}
                         {#each mod.modTagNames as tag}
                             <span class="tag">{tag}</span>
                         {/each}
