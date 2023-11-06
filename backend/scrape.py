@@ -49,10 +49,6 @@ class Database:
             tag int NOT NULL
         );''')
         self.db.execute('''CREATE INDEX IF NOT EXISTS idx_mod_row_id ON mod_tags (modRowId);''')
-        self.recreate_mods_table()
-
-    def recreate_mods_table(self):
-        self.db.execute('''DROP TABLE IF EXISTS mods;''')
         self.db.execute('''CREATE TABLE IF NOT EXISTS mods AS
             SELECT rowid, modId, modName, modTypeId, createDate, lastUpdate, json, fileList, civbuilder
             FROM mods_raw
@@ -60,6 +56,16 @@ class Database:
         ''')
         self.db.execute('''CREATE INDEX IF NOT EXISTS idx_create_date ON mods (createDate);''')
         self.db.execute('''CREATE INDEX IF NOT EXISTS idx_last_update ON mods (lastUpdate);''')
+
+    def update_mods_table(self):
+        self.db.execute('''DELETE FROM mods WHERE rowid NOT IN (SELECT MAX(rowid) FROM mods_raw GROUP BY modId);''')
+        self.db.execute('''INSERT INTO mods (rowid, modId, modName, modTypeId, createDate, lastUpdate, json, fileList, civbuilder)
+            SELECT rowid, modId, modName, modTypeId, createDate, lastUpdate, json, fileList, civbuilder
+            FROM mods_raw
+            WHERE rowid NOT IN (SELECT rowid from mods)
+            AND rowid IN (SELECT MAX(rowid) FROM mods_raw GROUP BY modId);
+        ''')
+
 
     def should_update(self, mod_id: int, last_update: str):
         result = self.db.execute('''
@@ -95,7 +101,7 @@ def do_full_scan():
 def main():
     db = Database()
     update_mods(db)
-    db.recreate_mods_table()
+    db.update_mods_table()
 
 
 def update_mods(db):
