@@ -143,7 +143,7 @@
                     </tr>
                     {#each history as entry}
                         <tr>
-                            <td>{entry.lastUpdate}</td>
+                            <td title="{entry.lastUpdate}">{new Date(entry.lastUpdate).toLocaleString()}</td>
                             <td>{entry.modName}</td>
                             <td>
                                 <DownloadLink fileUrl={entry.fileUrl} modFileSize={entry.modFileSize} className=""/>

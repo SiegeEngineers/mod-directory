@@ -5,7 +5,7 @@ An overview over mods on the mod center
 
 ## develop
 
-### frontend
+### backend
 
 Install dependencies:
 ```
@@ -19,7 +19,7 @@ Run development server:
 uvicorn main:app --reload
 ```
 
-### backend
+### frontend
 
 Install dependencies:
 ```
